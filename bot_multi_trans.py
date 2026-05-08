@@ -376,6 +376,72 @@ def format_translation(word: str, source_lang: str, translations: dict, phonetic
     return "\n".join(lines)
 
 
+# ============================================================
+# === MONEY CALCULATOR (bổ sung từ botstc.py) ===
+# ============================================================
+
+balance = 0
+
+
+def format_money(x):
+    """Format số tiền theo kiểu Việt Nam: 1000000 -> 1.000.000"""
+    return format(int(x), ",").replace(",", ".")
+
+
+def parse_money(text):
+    """Parse chuỗi số tiền, loại bỏ dấu chấm/phẩy"""
+    return float(text.replace(".", "").replace(",", "").strip())
+
+
+async def handle_money(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handler tính tiền: cộng (+), trừ (-), reset (#dcsd)"""
+    global balance
+
+    # Lấy text hoặc caption (hỗ trợ cả ảnh có caption)
+    text = ""
+    if update.message.text:
+        text = update.message.text.strip()
+    elif update.message.caption:
+        text = update.message.caption.strip()
+    else:
+        return
+
+    try:
+        # Chỉ lấy dòng đầu tiên
+        first_line = text.split("\n")[0].strip()
+
+        # ➕ Cộng tiền
+        if first_line.startswith("+"):
+            amount = parse_money(first_line.replace("+", "").strip())
+            balance += amount
+            await update.message.reply_text(
+                f"➕ +{format_money(amount)}\n💰 Số dư: {format_money(balance)}"
+            )
+
+        # ➖ Trừ tiền
+        elif first_line.startswith("-"):
+            amount = parse_money(first_line.replace("-", "").strip())
+            balance -= amount
+            await update.message.reply_text(
+                f"➖ -{format_money(amount)}\n💰 Số dư: {format_money(balance)}"
+            )
+
+        # 🔄 Reset / đặt lại số dư: #dcsd <số>
+        elif first_line.startswith("#dcsd"):
+            parts = first_line.split()
+            if len(parts) == 2:
+                balance = parse_money(parts[1])
+                await update.message.reply_text(
+                    f"🔄 Reset số dư: {format_money(balance)}"
+                )
+            else:
+                await update.message.reply_text("❌ Dùng đúng: #dcsd 100")
+
+    except Exception as e:
+        logger.error(f"Money handler error: {e}")
+        await update.message.reply_text("❌ Sai định dạng tiền")
+
+
 def main() -> None:
     """Start the bot"""
     TOKEN = "8639657231:AAGUn7LpYe5AHOVTKiRiFV-1CKgZaR4pPt0"
@@ -388,10 +454,24 @@ def main() -> None:
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
+
+    # === Handler tính tiền (đăng ký TRƯỚC handler dịch) ===
+    # Chỉ bắt tin nhắn (text hoặc caption) bắt đầu bằng +, -, hoặc #dcsd
+    money_pattern = r'^\s*([+\-]|#dcsd)'
+    money_filter = (
+        filters.Regex(money_pattern)
+        | filters.CaptionRegex(money_pattern)
+    )
+    application.add_handler(
+        MessageHandler(money_filter & ~filters.COMMAND, handle_money)
+    )
+
+    # Handler dịch — chạy SAU money_filter, chỉ áp dụng cho text còn lại
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
 
     print("🤖 Bot is running...")
-    print("💡 Nhập /start để test bot")
+    print("💡 Nhập /start để test bot dịch")
+    print("💡 Gõ +1000 / -500 / #dcsd 0 để dùng bot tính tiền")
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
