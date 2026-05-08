@@ -38,30 +38,44 @@ kks = pykakasi.kakasi()
 # === LANGUAGE DETECTION ===
 
 def detect_language(text: str) -> str:
-    """Auto-detect input language"""
     text = text.strip()
-
+    
+    # Vietnamese first (highest priority)
     vietnamese_chars = r'[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]'
     if re.search(vietnamese_chars, text.lower()):
         return 'vi'
-
-    japanese_chars = r'[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]'
-    if re.search(japanese_chars, text):
-        return 'ja'
-
+    
+    # Korean (before Japanese because Hangul is unique)
     korean_chars = r'[\uAC00-\uD7AF]'
     if re.search(korean_chars, text):
         return 'ko'
-
+    
+    # Chinese (check BEFORE Japanese)
     simplified_chars = r'[\u4E00-\u9FFF]'
-    traditional_chars = r'[經議調確總資國學鄰將報過進軍區劃應選國]'
-
+    traditional_chars = r'[經議調確總資國學鄰將報過進軍區劃應選國兩國會議員經國務學習國家國會國防國際國務院]'
+    
     if re.search(simplified_chars, text):
-        if re.search(traditional_chars, text):
+        # Count traditional characters
+        trad_count = len(re.findall(traditional_chars, text))
+        simplified_only = r'[刘张李王赵吕贾韦何吕卢葛窦苏胡杜夏韦谢邹喜水火土金木风雨雪云天日月星宫城]'
+        simp_count = len(re.findall(simplified_only, text))
+        
+        # If more than 30% traditional chars → Traditional Chinese
+        if len(text) > 0 and trad_count > len(text) * 0.3:
             return 'zh-TW'
+        # If has simplified-only chars → Simplified Chinese
+        elif simp_count > trad_count:
+            return 'zh-CN'
+        # Default to Simplified
         else:
             return 'zh-CN'
-
+    
+    # Japanese (Hiragana/Katakana = definitely Japanese)
+    japanese_chars = r'[\u3040-\u309F\u30A0-\u30FF]'
+    if re.search(japanese_chars, text):
+        return 'ja'
+    
+    # English (default)
     return 'en'
 
 
