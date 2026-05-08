@@ -44,21 +44,37 @@ def detect_language(text: str) -> str:
     if re.search(r'[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]', text.lower()):
         return 'vi'
     
-    # Korean
+    # Korean (Hangul)
     if re.search(r'[\uAC00-\uD7AF]', text):
         return 'ko'
     
-    # Japanese (Hiragana/Katakana)
+    # Japanese (Hiragana/Katakana - chỉ có trong tiếng Nhật)
     if re.search(r'[\u3040-\u309F\u30A0-\u30FF]', text):
         return 'ja'
     
-    # Chinese - để Google Translate detect Traditional vs Simplified
+    # Chinese (Hanzi)
     if re.search(r'[\u4E00-\u9FFF]', text):
-        # Gửi về Google, nó sẽ tự detect đúng
-        return 'zh'  # Google sẽ auto-detect zh-TW vs zh-CN
+        # Ký tự CHỈ có trong Phồn Thể (Traditional)
+        traditional_only = '經國學會與為時對進來說從這樣個實現發展動關係資數據訊構處應該設計們個體醫藥開關閉網絡電腦電話視聽讀寫書報紙誌雜誌證據認識識別準確總計劃過愛戀戀愛戀人戀情戀慕戀戀'
+        
+        # Ký tự CHỈ có trong Giản Thể (Simplified)
+        simplified_only = '经国学会与为时对进来说从这样个实现发展动关系资数据讯构处应该设计们体医药开关闭网络电脑电话视听读写书报纸志杂志证据认识别准确总计划过爱恋'
+        
+        # Đếm số ký tự trong text
+        trad_count = sum(1 for c in text if c in traditional_only)
+        simp_count = sum(1 for c in text if c in simplified_only)
+        
+        # So sánh
+        if trad_count > simp_count:
+            return 'zh-TW'
+        elif simp_count > trad_count:
+            return 'zh-CN'
+        else:
+            # Nếu không phân biệt được → mặc định Giản Thể
+            return 'zh-CN'
     
+    # English (default)
     return 'en'
-
 
 # === PHONETICS ===
 
