@@ -447,7 +447,8 @@ async def handle_money(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 def main() -> None:
     """Start the bot"""
-    TOKEN = "8639657231:AAGUn7LpYe5AHOVTKiRiFV-1CKgZaR4pPt0"
+    import os
+    TOKEN = os.getenv("TOKEN")
 
     if not TOKEN or TOKEN == "YOUR_BOT_TOKEN_HERE":
         print("❌ ERROR: Vui lòng đặt Telegram bot token!")
