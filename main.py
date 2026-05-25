@@ -574,7 +574,13 @@ def main() -> None:
     application.add_handler(
         MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text)
     )
+from telegram import ReplyKeyboardRemove
 
+async def start(update, context):
+    await update.message.reply_text(
+        "Reset keyboard",
+        reply_markup=ReplyKeyboardRemove()
+    )
     print("🤖 Bot is running...")
     print("💡 /start để test bot dịch")
     print("💡 +1000 / -500 / #dcsd 0 để dùng bot tính tiền")
