@@ -502,7 +502,7 @@ async def handle_money(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             amount = parse_money(first_line[1:])
             chat_data["balance"] += amount
             await update.message.reply_text(
-                f"➕ +{format_money(amount)}\n💰 Số dư: {format_money(chat_data['balance'])}"
+                f"🟢 +{format_money(amount)}\n💰 Số dư: {format_money(chat_data['balance'])}"
             )
 
         # ➖ Trừ
@@ -510,7 +510,7 @@ async def handle_money(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             amount = parse_money(first_line[1:])
             chat_data["balance"] -= amount
             await update.message.reply_text(
-                f"➖ -{format_money(amount)}\n💰 Số dư: {format_money(chat_data['balance'])}"
+                f"🔴 -{format_money(amount)}\n💰 Số dư: {format_money(chat_data['balance'])}"
             )
 
         # 🔄 Reset
@@ -523,7 +523,12 @@ async def handle_money(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                 )
             else:
                 await update.message.reply_text("❌ Dùng đúng: `#dcsd 100`", parse_mode="Markdown")
-
+            async def check_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
+                global balance
+                formatted_balance = f"{balance:,.0f}".replace(",", ".")
+                await update.message.reply_text(
+                    f"💰 Số dư hiện tại: {formatted_balance} VNĐ"
+                )
     except ValueError:
         await update.message.reply_text("❌ Sai định dạng số tiền")
     except Exception as e:
@@ -559,7 +564,8 @@ def main() -> None:
     # Commands
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
-
+    application.add_handler(CommandHandler("ktsd", check_balance))
+    
     # Money handler (đăng ký TRƯỚC handler dịch)
     money_pattern = r"^\s*([+\-]\s*\d|#dcsd)"
     money_filter = (
