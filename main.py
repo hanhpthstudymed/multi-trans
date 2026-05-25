@@ -6,6 +6,7 @@ Supports: English, Vietnamese, Chinese (Simplified & Traditional), Japanese, Kor
 """
 
 import logging
+import os
 import asyncio
 import aiohttp
 import re
@@ -444,11 +445,8 @@ async def handle_money(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         logger.error(f"Money handler error: {e}")
         await update.message.reply_text("❌ Sai định dạng tiền")
 
-
+TOKEN = os.getenv("TOKEN")
 def main() -> None:
-    """Start the bot"""
-    import os
-    TOKEN = os.getenv("TOKEN")
 
     if not TOKEN or TOKEN == "YOUR_BOT_TOKEN_HERE":
         print("❌ ERROR: Vui lòng đặt Telegram bot token!")
