@@ -523,12 +523,7 @@ async def handle_money(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                 )
             else:
                 await update.message.reply_text("❌ Dùng đúng: `#dcsd 100`", parse_mode="Markdown")
-            async def check_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
-                global balance
-                formatted_balance = f"{balance:,.0f}".replace(",", ".")
-                await update.message.reply_text(
-                    f"💰 Số dư hiện tại: {formatted_balance} VNĐ"
-                )
+            
     except ValueError:
         await update.message.reply_text("❌ Sai định dạng số tiền")
     except Exception as e:
@@ -546,7 +541,14 @@ async def _on_shutdown(app: Application) -> None:
     if _http_session and not _http_session.closed:
         await _http_session.close()
         logger.info("aiohttp session closed.")
+async def check_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global balance
 
+    formatted_balance = f"{balance:,.0f}".replace(",", ".")
+
+    await update.message.reply_text(
+        f"💰 Số dư hiện tại: {formatted_balance} VNĐ"
+    )
 
 def main() -> None:
     token = os.getenv("TOKEN")
