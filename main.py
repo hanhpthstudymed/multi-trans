@@ -542,9 +542,12 @@ async def _on_shutdown(app: Application) -> None:
         await _http_session.close()
         logger.info("aiohttp session closed.")
 async def check_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global balance
+    chat_data = context.chat_data
 
-    formatted_balance = f"{balance:,.0f}".replace(",", ".")
+    if "balance" not in chat_data:
+        chat_data["balance"] = 0.0
+
+    formatted_balance = format_money(chat_data["balance"])
 
     await update.message.reply_text(
         f"💰 Số dư hiện tại: {formatted_balance} VNĐ"
